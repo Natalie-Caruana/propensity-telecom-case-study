@@ -1,0 +1,37 @@
+data:
+  raw_path: "data/raw/telecom_customers.csv"
+  processed_path: "data/processed/features.parquet"
+  test_size: 0.2
+  random_state: 42
+
+features:
+  numeric:
+    - age
+    - tenure_months
+    - monthly_charges
+    - data_usage_gb
+    - call_minutes
+    - num_products
+    - num_complaints
+    - customer_service_calls
+  categorical:
+    - region
+    - contract_type
+    - internet_service
+  binary:
+    - has_streaming
+    - has_device_protection
+  target: upgraded
+
+model:
+  n_estimators: 200
+  max_depth: 6
+  min_samples_leaf: 5
+  class_weight: balanced
+  random_state: 42
+  n_jobs: -1
+
+mlflow:
+  experiment_name: propensity-telecom
+  model_name: propensity-rf
+  tracking_uri: "mlruns"
