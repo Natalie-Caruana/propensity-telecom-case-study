@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# uv
+.python-version
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Testing & QA
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Data, models, outputs (use DVC/LFS for versioning these)
+data/raw/
+data/processed/
+models/
+outputs/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE (commit project settings, ignore personal ones)
+.vscode/*.code-workspace
+.idea/
+*.DS_Store
+
+# Secrets
+.env
+*.pem
+*.key
+
+# OS
+Thumbs.db
