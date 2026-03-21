@@ -1,5 +1,6 @@
 """Training pipeline — wires domain and I/O together."""
 
+import mlflow
 import pandas as pd
 from loguru import logger
 from sklearn.model_selection import train_test_split
@@ -27,6 +28,9 @@ def run_training(cfg: TrainConfig) -> dict[str, float]:
     Returns:
         Dictionary of test-set evaluation metrics.
     """
+    # params + metrics auto-logged; model logged manually via ModelRegistry
+    mlflow.sklearn.autolog(log_models=False)
+
     # ── 1. Load ───────────────────────────────────────────────────────────────
     loader = DatasetLoader(cfg.data.raw_path)
     df = loader.load()
@@ -37,13 +41,16 @@ def run_training(cfg: TrainConfig) -> dict[str, float]:
 
     # ── 2. Split ──────────────────────────────────────────────────────────────
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
+        X,
+        y,
         test_size=cfg.data.test_size,
         random_state=cfg.data.random_state,
         stratify=y,
     )
     logger.info(f"Train: {len(X_train):,}  |  Test: {len(X_test):,}")
-    logger.info(f"Upgrade rate — train: {y_train.mean():.1%}  test: {y_test.mean():.1%}")  # noqa: E501
+    logger.info(
+        f"Upgrade rate — train: {y_train.mean():.1%}  test: {y_test.mean():.1%}"
+    )  # noqa: E501
 
     # ── 3. Build & fit pipeline ───────────────────────────────────────────────
     pipeline = build_pipeline(

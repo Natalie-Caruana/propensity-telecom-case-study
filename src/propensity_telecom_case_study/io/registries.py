@@ -46,6 +46,14 @@ class ModelRegistry:
             )
             run_id = run.info.run_id
 
+        # Tag latest registered version as @champion — stable deployment pointer
+        client = mlflow.tracking.MlflowClient()
+        latest = client.get_registered_model(self.cfg.model_name).latest_versions[-1]
+        client.set_registered_model_alias(
+            self.cfg.model_name, "champion", latest.version
+        )
+
         logger.info(f"MLflow run logged: {run_id}")
+        logger.info(f"Model '{self.cfg.model_name}' v{latest.version} tagged @champion")
         logger.info(f"Metrics: {metrics}")
         return run_id
