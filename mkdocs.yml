@@ -1,0 +1,28 @@
+site_name: Propensity Telecom Case Study
+site_description: Propensity model to identify telecom customers most likely to upgrade their plan
+site_url: https://your-org.github.io/propensity-telecom-case-study
+repo_url: https://github.com/your-org/propensity-telecom-case-study
+repo_name: propensity-telecom-case-study
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: coral
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - admonition

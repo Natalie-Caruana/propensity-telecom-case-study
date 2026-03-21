@@ -69,5 +69,7 @@ tag_format = "v$version"
 [dependency-groups]
 dev = [
     "commitizen>=4.13.9",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
     "pre-commit>=4.5.1",
 ]

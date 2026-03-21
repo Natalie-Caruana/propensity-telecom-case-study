@@ -6,3 +6,11 @@ import 'tasks/train.just'
 # Show available recipes
 default:
     @just --list
+
+# Serve documentation locally
+docs:
+    uv run mkdocs serve
+
+# Build documentation site
+docs-build:
+    uv run mkdocs build

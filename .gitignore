@@ -51,3 +51,6 @@ mlartifacts/
 
 # OS
 Thumbs.db
+
+# Docs build output
+site/
