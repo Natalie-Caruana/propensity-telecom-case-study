@@ -35,6 +35,7 @@ def run_inference(cfg: TrainConfig, input_path: str | Path) -> pd.DataFrame:
     pipeline = mlflow.sklearn.load_model(model_uri)
 
     df["propensity_score"] = pipeline.predict_proba(X)[:, 1]
-    logger.info(f"Scored {len(df):,} customers  |  mean propensity: {df['propensity_score'].mean():.3f}")
+    mean_score = df["propensity_score"].mean()
+    logger.info(f"Scored {len(df):,} customers  |  mean propensity: {mean_score:.3f}")
 
     return df

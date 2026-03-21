@@ -26,7 +26,9 @@ def build_pipeline(
     Returns:
         Unfitted sklearn Pipeline.
     """
-    preprocessor = build_preprocessor(numeric_features, categorical_features, binary_features)
+    preprocessor = build_preprocessor(
+        numeric_features, categorical_features, binary_features
+    )
 
     classifier = RandomForestClassifier(
         n_estimators=cfg.n_estimators,

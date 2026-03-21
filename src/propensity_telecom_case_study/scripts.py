@@ -19,7 +19,9 @@ def train() -> None:
     cfg = load_config()
     logger.info(f"Starting training — experiment: {cfg.mlflow.experiment_name}")
     metrics = run_training(cfg)
-    logger.info(f"Training complete. ROC-AUC={metrics['roc_auc']:.3f}  PR-AUC={metrics['avg_precision']:.3f}")
+    roc = metrics["roc_auc"]
+    pr = metrics["avg_precision"]
+    logger.info(f"Training complete. ROC-AUC={roc:.3f}  PR-AUC={pr:.3f}")
 
 
 def predict() -> None:
@@ -29,9 +31,11 @@ def predict() -> None:
         uv run propensity-predict --input data/raw/telecom_customers.csv
     """
     import argparse
-    parser = argparse.ArgumentParser(description="Score customers with the propensity model.")
-    parser.add_argument("--input", required=True, help="Path to CSV of customers to score.")
-    parser.add_argument("--output", default="outputs/scores.csv", help="Path to write scored CSV.")
+    parser = argparse.ArgumentParser(
+        description="Score customers with the propensity model."
+    )
+    parser.add_argument("--input", required=True, help="Path to input CSV.")
+    parser.add_argument("--output", default="outputs/scores.csv", help="Output path.")
     args = parser.parse_args()
 
     cfg = load_config()

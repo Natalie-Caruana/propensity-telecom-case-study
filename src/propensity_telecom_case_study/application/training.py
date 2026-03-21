@@ -43,7 +43,7 @@ def run_training(cfg: TrainConfig) -> dict[str, float]:
         stratify=y,
     )
     logger.info(f"Train: {len(X_train):,}  |  Test: {len(X_test):,}")
-    logger.info(f"Upgrade rate — train: {y_train.mean():.1%}  test: {y_test.mean():.1%}")
+    logger.info(f"Upgrade rate — train: {y_train.mean():.1%}  test: {y_test.mean():.1%}")  # noqa: E501
 
     # ── 3. Build & fit pipeline ───────────────────────────────────────────────
     pipeline = build_pipeline(
