@@ -1,7 +1,9 @@
 """MLflow model registry interactions — all MLflow I/O lives here."""
 
 import mlflow
+import mlflow.data
 import mlflow.sklearn
+import pandas as pd
 from loguru import logger
 from sklearn.pipeline import Pipeline
 
@@ -25,13 +27,19 @@ class ModelRegistry:
         params: dict[str, object],
         metrics: dict[str, float],
         pipeline: Pipeline,
+        artifacts: dict[str, str] | None = None,
+        train_df: pd.DataFrame | None = None,
+        dataset_name: str = "telecom_customers",
     ) -> str:
-        """Log a training run: params, metrics, and the fitted pipeline artifact.
+        """Log a training run: params, metrics, artifacts, lineage, and model.
 
         Args:
-            params: Hyperparameters to log.
+            params: Hyperparameters to log (including git_commit).
             metrics: Evaluation metrics to log.
             pipeline: Fitted sklearn Pipeline to register.
+            artifacts: Optional dict of {label: local_file_path} to upload.
+            train_df: Optional training DataFrame for MLflow data lineage.
+            dataset_name: Name tag for the logged dataset.
 
         Returns:
             The MLflow run ID.
@@ -39,6 +47,20 @@ class ModelRegistry:
         with mlflow.start_run() as run:
             mlflow.log_params(params)
             mlflow.log_metrics(metrics)
+
+            # Data lineage
+            if train_df is not None:
+                dataset = mlflow.data.from_pandas(
+                    train_df, name=dataset_name, targets=None
+                )
+                mlflow.log_input(dataset, context="training")
+
+            # Artifacts (SHAP plot, drift report, etc.)
+            if artifacts:
+                for label, path in artifacts.items():
+                    mlflow.log_artifact(path, artifact_path=label)
+
+            # Register model
             mlflow.sklearn.log_model(
                 sk_model=pipeline,
                 artifact_path="model",
@@ -46,7 +68,7 @@ class ModelRegistry:
             )
             run_id = run.info.run_id
 
-        # Tag latest registered version as @champion — stable deployment pointer
+        # Tag latest version as @champion
         client = mlflow.tracking.MlflowClient()
         latest = client.get_registered_model(self.cfg.model_name).latest_versions[-1]
         client.set_registered_model_alias(

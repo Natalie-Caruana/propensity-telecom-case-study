@@ -17,14 +17,14 @@ def test_run_training_returns_metrics(train_config: TrainConfig) -> None:
 
 
 def test_run_training_logs_to_mlflow(train_config: TrainConfig) -> None:
-    # Given: training has run
+    # Given: training has run (tracking URI set inside run_training via ModelRegistry)
     import mlflow
 
-    mlflow.set_tracking_uri(train_config.mlflow.tracking_uri)
     run_training(train_config)
 
-    # When: querying the experiment
-    client = mlflow.tracking.MlflowClient()
+    # When: querying the experiment using the same URI as the run
+    mlflow.set_tracking_uri(train_config.mlflow.tracking_uri)
+    client = mlflow.tracking.MlflowClient(tracking_uri=train_config.mlflow.tracking_uri)
     experiment = client.get_experiment_by_name(train_config.mlflow.experiment_name)
 
     # Then: at least one run was created
