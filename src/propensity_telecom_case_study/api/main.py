@@ -7,6 +7,7 @@ from typing import Any
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
@@ -41,6 +42,15 @@ app = FastAPI(
     description="Score telecom customers for upsell propensity using the latest model.",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# Add CORS middleware to allow browser requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.mount("/static", StaticFiles(directory=_STATIC), name="static")
