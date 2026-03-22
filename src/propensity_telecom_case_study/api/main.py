@@ -2,22 +2,14 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
 
 import mlflow.sklearn
-import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from propensity_telecom_case_study.api.schemas import (
-    CustomerPrediction,
-    HealthResponse,
-    PredictionRequest,
-    PredictionResponse,
-)
+from propensity_telecom_case_study.api.routers import frontend, predict
 from propensity_telecom_case_study.config import TrainConfig, load_config
 
 
@@ -44,7 +36,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware to allow browser requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, specify exact origins
@@ -55,45 +46,5 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=_STATIC), name="static")
 
-
-@app.get("/", include_in_schema=False)
-def index() -> FileResponse:
-    """Serve the scoring UI."""
-    return FileResponse(_STATIC / "index.html")
-
-
-@app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    """Liveness check — confirms the model is loaded and the server is ready."""
-    model_loaded = hasattr(app.state, "pipeline") and app.state.pipeline is not None
-    model_name = app.state.cfg.mlflow.model_name if model_loaded else "unknown"
-    return HealthResponse(
-        status="ok" if model_loaded else "degraded",
-        model_loaded=model_loaded,
-        model_name=model_name,
-    )
-
-
-@app.post("/predict", response_model=PredictionResponse)
-def predict(request: PredictionRequest) -> PredictionResponse:
-    """Score a batch of customers and return their propensity scores."""
-    if not hasattr(app.state, "pipeline") or app.state.pipeline is None:
-        raise HTTPException(status_code=503, detail="Model not loaded.")
-
-    cfg: TrainConfig = app.state.cfg
-    pipeline: Any = app.state.pipeline
-
-    all_features = cfg.features.numeric + cfg.features.categorical + cfg.features.binary
-    records = [customer.model_dump() for customer in request.customers]
-    df = pd.DataFrame(records)[all_features]
-
-    scores: list[float] = pipeline.predict_proba(df)[:, 1].tolist()
-    logger.info(
-        f"Scored {len(scores)} | mean propensity: {sum(scores) / len(scores):.3f}"
-    )
-
-    return PredictionResponse(
-        predictions=[CustomerPrediction(propensity_score=s) for s in scores],
-        model_name=cfg.mlflow.model_name,
-        count=len(scores),
-    )
+app.include_router(predict.router)
+app.include_router(frontend.router)

@@ -72,7 +72,7 @@ Open `http://localhost:8000` in a browser after starting the server.
   - **Orange** 35–65% — medium propensity
   - **Red** < 35% — low propensity
 
-The API URL field at the top of the page can be pointed at any running instance of the server.
+The UI is served as a **Jinja2 template** (`api/templates/index.html.j2`) via a dedicated frontend router (`api/routers/frontend.py`). The predict endpoint URL is injected server-side from the actual request base URL — no hardcoded `localhost` addresses. The environment badge (`development` / `staging` / `production`) is controlled by the `APP_ENV` environment variable.
 
 ### REST example
 
@@ -100,7 +100,15 @@ propensity-telecom-case-study/
 │   ├── domain/             # Pure functions (features, metrics, model)
 │   ├── io/                 # Data loaders, MLflow registry
 │   ├── application/        # Training and inference pipelines
-│   └── api/                # FastAPI inference server (main.py, schemas.py, static/)
+│   └── api/                # FastAPI inference server
+│       ├── main.py         # App factory — lifespan, middleware, router mounts
+│       ├── schemas.py      # Pydantic request/response models
+│       ├── routers/
+│       │   ├── predict.py  # GET /health, POST /predict
+│       │   └── frontend.py # GET / — renders Jinja2 template
+│       ├── templates/
+│       │   └── index.html.j2  # Scoring UI (server-side rendered)
+│       └── static/         # CSS / JS assets served at /static
 ├── notebooks/              # EDA and prototype (01_prototype.ipynb)
 ├── configs/train.yaml      # All hyperparameters and paths
 ├── tests/                  # Mirrors src/ — 22 tests, 80% coverage
