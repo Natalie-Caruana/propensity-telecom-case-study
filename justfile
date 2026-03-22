@@ -2,6 +2,7 @@ import 'tasks/check.just'
 import 'tasks/install.just'
 import 'tasks/clean.just'
 import 'tasks/train.just'
+import 'tasks/serve.just'
 
 # Show available recipes
 default:

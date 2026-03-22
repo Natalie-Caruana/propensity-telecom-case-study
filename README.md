@@ -27,6 +27,11 @@ uv run mlflow ui --backend-store-uri mlruns
 
 # 5. Score a batch of customers
 uv run propensity-predict --input data/raw/telecom_customers.csv --output outputs/scores.csv
+
+# 6. Start the REST API server
+uv run propensity-serve
+# POST /predict  →  {"customers": [...]}
+# GET  /health   →  liveness check
 ```
 
 Or with `just`:
@@ -34,6 +39,8 @@ Or with `just`:
 just install   # set up environment + pre-commit hooks
 just train     # train and log to MLflow
 just check     # lint + test
+just serve     # start the inference API on port 8000
+just serve-dev # start with auto-reload (development)
 ```
 
 ## Project Structure
@@ -42,10 +49,11 @@ just check     # lint + test
 propensity-telecom-case-study/
 ├── src/propensity_telecom_case_study/
 │   ├── config.py           # Pydantic schemas + OmegaConf loader
-│   ├── scripts.py          # CLI: propensity-train / propensity-predict
+│   ├── scripts.py          # CLI: propensity-train / propensity-predict / propensity-serve
 │   ├── domain/             # Pure functions (features, metrics, model)
 │   ├── io/                 # Data loaders, MLflow registry
-│   └── application/        # Training and inference pipelines
+│   ├── application/        # Training and inference pipelines
+│   └── api/                # FastAPI inference server (main.py, schemas.py)
 ├── notebooks/              # EDA and prototype (01_prototype.ipynb)
 ├── configs/train.yaml      # All hyperparameters and paths
 ├── tests/                  # Mirrors src/ — 17 tests, 70% coverage

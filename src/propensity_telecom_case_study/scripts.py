@@ -31,6 +31,7 @@ def predict() -> None:
         uv run propensity-predict --input data/raw/telecom_customers.csv
     """
     import argparse
+
     parser = argparse.ArgumentParser(
         description="Score customers with the propensity model."
     )
@@ -42,10 +43,34 @@ def predict() -> None:
     scored = run_inference(cfg, args.input)
 
     import pathlib
+
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     scored.to_csv(out, index=False)
     logger.info(f"Scores written to {out}")
+
+
+def serve() -> None:
+    """Start the FastAPI inference server.
+
+    Usage:
+        uv run propensity-serve
+        uv run propensity-serve --host 0.0.0.0 --port 8080
+    """
+    import argparse
+
+    import uvicorn
+
+    parser = argparse.ArgumentParser(description="Propensity inference server.")
+    parser.add_argument("--host", default="0.0.0.0", help="Bind host.")  # nosec B104
+    parser.add_argument("--port", type=int, default=8000, help="Bind port.")
+    args = parser.parse_args()
+
+    uvicorn.run(
+        "propensity_telecom_case_study.api.main:app",
+        host=args.host,
+        port=args.port,
+    )
 
 
 if __name__ == "__main__":

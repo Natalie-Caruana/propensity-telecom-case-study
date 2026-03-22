@@ -16,12 +16,14 @@ BINARY = ["has_streaming"]
 
 @pytest.fixture()
 def small_df() -> pd.DataFrame:
-    return pd.DataFrame({
-        "age": [25, 45, 60],
-        "tenure_months": [12, 36, 60],
-        "region": ["North", "South", "East"],
-        "has_streaming": [0, 1, 0],
-    })
+    return pd.DataFrame(
+        {
+            "age": [25, 45, 60],
+            "tenure_months": [12, 36, 60],
+            "region": ["North", "South", "East"],
+            "has_streaming": [0, 1, 0],
+        }
+    )
 
 
 def test_build_preprocessor_returns_column_transformer(small_df: pd.DataFrame) -> None:

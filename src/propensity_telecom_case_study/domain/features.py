@@ -21,20 +21,26 @@ def build_preprocessor(
     Returns:
         Unfitted ColumnTransformer ready to be placed in a Pipeline.
     """
-    numeric_transformer = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-    ])
+    numeric_transformer = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
 
-    categorical_transformer = Pipeline([
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
+    categorical_transformer = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ]
+    )
 
-    return ColumnTransformer([
-        ("num", numeric_transformer, numeric_features + binary_features),
-        ("cat", categorical_transformer, categorical_features),
-    ])
+    return ColumnTransformer(
+        [
+            ("num", numeric_transformer, numeric_features + binary_features),
+            ("cat", categorical_transformer, categorical_features),
+        ]
+    )
 
 
 def get_feature_names(

@@ -42,18 +42,26 @@ class TrainConfig(BaseModel):
     mlflow: MLflowConfig
 
 
-def load_config(path: str | Path = "configs/train.yaml") -> TrainConfig:
+def load_config(
+    path: str | Path = "configs/train.yaml", *, cli_overrides: bool = True
+) -> TrainConfig:
     """Load and validate training config from a YAML file.
 
     Merges YAML with any CLI overrides (e.g. model.max_depth=8).
 
     Args:
         path: Path to the YAML config file.
+        cli_overrides: Whether to merge CLI dot-notation overrides. Set to
+            False when running as a long-lived server (e.g. uvicorn) where
+            sys.argv contains non-OmegaConf arguments.
 
     Returns:
         Validated TrainConfig instance.
     """
     file_conf = omegaconf.OmegaConf.load(path)
-    cli_conf = omegaconf.OmegaConf.from_cli()
-    merged = omegaconf.OmegaConf.merge(file_conf, cli_conf)
+    if cli_overrides:
+        cli_conf = omegaconf.OmegaConf.from_cli()
+        merged = omegaconf.OmegaConf.merge(file_conf, cli_conf)
+    else:
+        merged = file_conf
     return TrainConfig(**omegaconf.OmegaConf.to_container(merged, resolve=True))  # type: ignore[arg-type]

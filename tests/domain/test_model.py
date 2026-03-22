@@ -23,14 +23,16 @@ MODEL_CFG = ModelConfig(
 
 @pytest.fixture()
 def small_df() -> pd.DataFrame:
-    return pd.DataFrame({
-        "age": [25, 45, 60, 30, 55],
-        "tenure_months": [12, 36, 60, 6, 48],
-        "monthly_charges": [30.0, 50.0, 80.0, 25.0, 70.0],
-        "region": ["North", "South", "East", "North", "West"],
-        "has_streaming": [0, 1, 0, 1, 1],
-        "upgraded": [0, 1, 0, 0, 1],
-    })
+    return pd.DataFrame(
+        {
+            "age": [25, 45, 60, 30, 55],
+            "tenure_months": [12, 36, 60, 6, 48],
+            "monthly_charges": [30.0, 50.0, 80.0, 25.0, 70.0],
+            "region": ["North", "South", "East", "North", "West"],
+            "has_streaming": [0, 1, 0, 1, 1],
+            "upgraded": [0, 1, 0, 0, 1],
+        }
+    )
 
 
 def test_build_pipeline_returns_sklearn_pipeline() -> None:
@@ -61,8 +63,14 @@ def test_pipeline_fit_predict(small_df: pd.DataFrame) -> None:
 
 def test_pipeline_uses_config_hyperparams() -> None:
     # Given: a specific n_estimators setting
-    cfg = ModelConfig(n_estimators=7, max_depth=2, min_samples_leaf=1,
-                      class_weight="balanced", random_state=0, n_jobs=1)
+    cfg = ModelConfig(
+        n_estimators=7,
+        max_depth=2,
+        min_samples_leaf=1,
+        class_weight="balanced",
+        random_state=0,
+        n_jobs=1,
+    )
     pipeline = build_pipeline(NUMERIC, CATEGORICAL, BINARY, cfg)
 
     # Then: classifier reflects that setting

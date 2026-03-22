@@ -15,9 +15,14 @@ from propensity_telecom_case_study.config import (
 )
 
 NUMERIC_FEATURES = [
-    "age", "tenure_months", "monthly_charges",
-    "data_usage_gb", "call_minutes", "num_products",
-    "num_complaints", "customer_service_calls",
+    "age",
+    "tenure_months",
+    "monthly_charges",
+    "data_usage_gb",
+    "call_minutes",
+    "num_products",
+    "num_complaints",
+    "customer_service_calls",
 ]
 CATEGORICAL_FEATURES = ["region", "contract_type", "internet_service"]
 BINARY_FEATURES = ["has_streaming", "has_device_protection"]
@@ -28,23 +33,25 @@ def sample_df() -> pd.DataFrame:
     """Small deterministic DataFrame matching the raw telecom schema."""
     rng = np.random.default_rng(0)
     n = 100
-    return pd.DataFrame({
-        "customer_id": [f"CUST_{i:04d}" for i in range(n)],
-        "age": rng.integers(18, 76, n),
-        "tenure_months": rng.integers(1, 121, n),
-        "monthly_charges": rng.uniform(20, 100, n).round(2),
-        "data_usage_gb": rng.uniform(0, 30, n).round(2),
-        "call_minutes": rng.integers(0, 1001, n),
-        "num_products": rng.integers(1, 5, n),
-        "num_complaints": rng.integers(0, 6, n),
-        "customer_service_calls": rng.integers(0, 11, n),
-        "region": rng.choice(["North", "South", "East", "West"], n),
-        "contract_type": rng.choice(["month-to-month", "one-year", "two-year"], n),
-        "internet_service": rng.choice(["Fiber", "DSL", "None"], n),
-        "has_streaming": rng.integers(0, 2, n),
-        "has_device_protection": rng.integers(0, 2, n),
-        "upgraded": rng.integers(0, 2, n),
-    })
+    return pd.DataFrame(
+        {
+            "customer_id": [f"CUST_{i:04d}" for i in range(n)],
+            "age": rng.integers(18, 76, n),
+            "tenure_months": rng.integers(1, 121, n),
+            "monthly_charges": rng.uniform(20, 100, n).round(2),
+            "data_usage_gb": rng.uniform(0, 30, n).round(2),
+            "call_minutes": rng.integers(0, 1001, n),
+            "num_products": rng.integers(1, 5, n),
+            "num_complaints": rng.integers(0, 6, n),
+            "customer_service_calls": rng.integers(0, 11, n),
+            "region": rng.choice(["North", "South", "East", "West"], n),
+            "contract_type": rng.choice(["month-to-month", "one-year", "two-year"], n),
+            "internet_service": rng.choice(["Fiber", "DSL", "None"], n),
+            "has_streaming": rng.integers(0, 2, n),
+            "has_device_protection": rng.integers(0, 2, n),
+            "upgraded": rng.integers(0, 2, n),
+        }
+    )
 
 
 @pytest.fixture()
