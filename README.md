@@ -30,6 +30,7 @@ uv run propensity-predict --input data/raw/telecom_customers.csv --output output
 
 # 6. Start the REST API server
 uv run propensity-serve
+# GET  /         →  scoring UI (open in browser)
 # POST /predict  →  {"customers": [...]}
 # GET  /health   →  liveness check
 ```
@@ -43,6 +44,52 @@ just serve     # start the inference API on port 8000
 just serve-dev # start with auto-reload (development)
 ```
 
+## Inference API & UI
+
+Start the server:
+
+```bash
+uv run propensity-serve              # default: http://localhost:8000
+uv run propensity-serve --port 8080  # custom port
+just serve-dev                       # auto-reload for development
+```
+
+| Route | Method | Description |
+|---|---|---|
+| `/` | GET | Browser scoring UI — fill in customer fields and get propensity scores |
+| `/predict` | POST | JSON batch inference — accepts `{"customers": [...]}` |
+| `/health` | GET | Liveness check — confirms model is loaded |
+| `/docs` | GET | Auto-generated OpenAPI / Swagger UI |
+
+### Scoring UI
+
+Open `http://localhost:8000` in a browser after starting the server.
+
+- Add one or more customer records (tabbed)
+- Fill in the 13 feature fields (numeric, categorical, binary)
+- Click **Score** to call `/predict` and see colour-coded propensity results:
+  - **Green** ≥ 65% — high propensity
+  - **Orange** 35–65% — medium propensity
+  - **Red** < 35% — low propensity
+
+The API URL field at the top of the page can be pointed at any running instance of the server.
+
+### REST example
+
+```bash
+curl -s -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customers": [{
+      "age": 35, "tenure_months": 24, "monthly_charges": 65,
+      "data_usage_gb": 10, "call_minutes": 200,
+      "num_products": 2, "num_complaints": 0, "customer_service_calls": 1,
+      "region": "North", "contract_type": "monthly",
+      "internet_service": "fiber", "has_streaming": 1, "has_device_protection": 0
+    }]
+  }' | python -m json.tool
+```
+
 ## Project Structure
 
 ```
@@ -53,10 +100,10 @@ propensity-telecom-case-study/
 │   ├── domain/             # Pure functions (features, metrics, model)
 │   ├── io/                 # Data loaders, MLflow registry
 │   ├── application/        # Training and inference pipelines
-│   └── api/                # FastAPI inference server (main.py, schemas.py)
+│   └── api/                # FastAPI inference server (main.py, schemas.py, static/)
 ├── notebooks/              # EDA and prototype (01_prototype.ipynb)
 ├── configs/train.yaml      # All hyperparameters and paths
-├── tests/                  # Mirrors src/ — 17 tests, 70% coverage
+├── tests/                  # Mirrors src/ — 22 tests, 80% coverage
 ├── scripts/                # One-off utilities (data generation)
 ├── tasks/                  # just task modules
 ├── Dockerfile              # Multi-stage production image
