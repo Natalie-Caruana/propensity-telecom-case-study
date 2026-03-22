@@ -1,11 +1,14 @@
 """FastAPI inference server — loads the registered model once and scores customers."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from propensity_telecom_case_study.api.schemas import (
@@ -31,12 +34,22 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     logger.info("Server shutting down.")
 
 
+_STATIC = Path(__file__).parent / "static"
+
 app = FastAPI(
     title="Propensity Telecom Inference API",
     description="Score telecom customers for upsell propensity using the latest model.",
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index() -> FileResponse:
+    """Serve the scoring UI."""
+    return FileResponse(_STATIC / "index.html")
 
 
 @app.get("/health", response_model=HealthResponse)

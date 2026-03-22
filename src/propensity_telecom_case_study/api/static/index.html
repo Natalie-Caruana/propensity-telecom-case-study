@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propensity Telecom — Score Customers</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      max-width: 760px;
+      margin: 0 auto 2rem;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header p  { margin-top: .25rem; color: #4a5568; font-size: .9rem; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      padding: 1.5rem;
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #2d3748; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .75rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 500;
+      color: #4a5568;
+      margin-bottom: .25rem;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      padding: .45rem .6rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .field input:focus, .field select:focus { border-color: #4299e1; }
+
+    .actions {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: .55rem 1.25rem;
+      border: none;
+      border-radius: 7px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button:not(:disabled):hover { opacity: .88; }
+
+    #btn-predict { background: #3182ce; color: #fff; }
+    #btn-add     { background: #e2e8f0; color: #2d3748; }
+    #btn-clear   { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+
+    #api-url-input {
+      flex: 1;
+      min-width: 220px;
+      padding: .45rem .6rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: .85rem;
+    }
+
+    /* Customer tabs */
+    #tabs {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .tab-btn {
+      padding: .3rem .8rem;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 500;
+      border: 1.5px solid #cbd5e0;
+      background: #f7fafc;
+      color: #4a5568;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #3182ce;
+      border-color: #3182ce;
+      color: #fff;
+    }
+
+    .tab-btn .remove-tab {
+      margin-left: .35rem;
+      font-weight: 700;
+      opacity: .65;
+    }
+
+    /* Results */
+    #results-section { display: none; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .75rem;
+      margin-top: .75rem;
+    }
+
+    .result-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .result-card .label { font-size: .78rem; color: #718096; margin-bottom: .4rem; }
+    .result-card .score { font-size: 2rem; font-weight: 700; }
+    .result-card .tier  { font-size: .78rem; font-weight: 600; margin-top: .3rem; }
+
+    .score.high  { color: #276749; }
+    .score.mid   { color: #c05621; }
+    .score.low   { color: #9b2c2c; }
+
+    .tier.high  { color: #276749; background: #c6f6d5; border-radius: 20px; padding: .1rem .5rem; }
+    .tier.mid   { color: #c05621; background: #feebc8; border-radius: 20px; padding: .1rem .5rem; }
+    .tier.low   { color: #9b2c2c; background: #fed7d7; border-radius: 20px; padding: .1rem .5rem; }
+
+    #error-msg {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #feb2b2;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      color: #c53030;
+      font-size: .88rem;
+      max-width: 760px;
+      margin: 0 auto 1rem;
+    }
+
+    #status-bar {
+      font-size: .8rem;
+      color: #718096;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Propensity Telecom — Customer Scoring</h1>
+  <p>Score one or more customers against the upsell propensity model via the REST API.</p>
+</header>
+
+<!-- API URL bar -->
+<div class="card">
+  <h2>API endpoint</h2>
+  <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+    <label for="api-url-input" style="font-size:.85rem;white-space:nowrap;">POST</label>
+    <input id="api-url-input" type="text" value="http://localhost:8000/predict" />
+  </div>
+</div>
+
+<!-- Customer form -->
+<div class="card" id="form-card">
+  <h2>Customers</h2>
+
+  <div id="tabs"></div>
+  <div id="customer-forms"></div>
+
+  <div class="actions">
+    <button id="btn-add">+ Add customer</button>
+    <button id="btn-clear">Clear all</button>
+    <span style="flex:1"></span>
+    <span id="status-bar"></span>
+    <button id="btn-predict">Score</button>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="card" id="results-section">
+  <h2>Results</h2>
+  <div id="result-grid" class="result-grid"></div>
+</div>
+
+<div id="error-msg"></div>
+
+<script>
+  // ── Schema ────────────────────────────────────────────────────────────
+  const FIELDS = [
+    { key: "age",                    label: "Age",                    type: "number", step: 1,   min: 18  },
+    { key: "tenure_months",          label: "Tenure (months)",        type: "number", step: 1,   min: 0   },
+    { key: "monthly_charges",        label: "Monthly Charges ($)",    type: "number", step: 0.01,min: 0   },
+    { key: "data_usage_gb",          label: "Data Usage (GB)",        type: "number", step: 0.1, min: 0   },
+    { key: "call_minutes",           label: "Call Minutes",           type: "number", step: 1,   min: 0   },
+    { key: "num_products",           label: "# Products",             type: "number", step: 1,   min: 0   },
+    { key: "num_complaints",         label: "# Complaints",           type: "number", step: 1,   min: 0   },
+    { key: "customer_service_calls", label: "Customer Service Calls", type: "number", step: 1,   min: 0   },
+    { key: "region",                 label: "Region",                 type: "select",
+      options: ["North","South","East","West","Central"] },
+    { key: "contract_type",          label: "Contract Type",          type: "select",
+      options: ["monthly","yearly","two_year"] },
+    { key: "internet_service",       label: "Internet Service",       type: "select",
+      options: ["fiber","dsl","none"] },
+    { key: "has_streaming",          label: "Has Streaming",          type: "select",
+      options: [0, 1], labels: ["No", "Yes"] },
+    { key: "has_device_protection",  label: "Has Device Protection",  type: "select",
+      options: [0, 1], labels: ["No", "Yes"] },
+  ];
+
+  const DEFAULTS = {
+    age: 35, tenure_months: 24, monthly_charges: 65, data_usage_gb: 10,
+    call_minutes: 200, num_products: 2, num_complaints: 0,
+    customer_service_calls: 1, region: "North", contract_type: "monthly",
+    internet_service: "fiber", has_streaming: 1, has_device_protection: 0,
+  };
+
+  // ── State ─────────────────────────────────────────────────────────────
+  let customers = [structuredClone(DEFAULTS)];
+  let activeIdx = 0;
+
+  // ── DOM refs ──────────────────────────────────────────────────────────
+  const tabsEl       = document.getElementById("tabs");
+  const formsEl      = document.getElementById("customer-forms");
+  const resultsEl    = document.getElementById("results-section");
+  const resultGrid   = document.getElementById("result-grid");
+  const errorMsg     = document.getElementById("error-msg");
+  const statusBar    = document.getElementById("status-bar");
+  const btnPredict   = document.getElementById("btn-predict");
+  const btnAdd       = document.getElementById("btn-add");
+  const btnClear     = document.getElementById("btn-clear");
+  const apiUrlInput  = document.getElementById("api-url-input");
+
+  // ── Render ────────────────────────────────────────────────────────────
+  function render() {
+    // Tabs
+    tabsEl.innerHTML = customers.map((_, i) => `
+      <button class="tab-btn ${i === activeIdx ? "active" : ""}" data-idx="${i}">
+        Customer ${i + 1}
+        ${customers.length > 1
+          ? `<span class="remove-tab" data-remove="${i}">×</span>`
+          : ""}
+      </button>
+    `).join("");
+
+    // Form
+    const c = customers[activeIdx];
+    formsEl.innerHTML = `<div class="grid">${FIELDS.map(f => {
+      if (f.type === "select") {
+        const opts = f.options.map((o, oi) =>
+          `<option value="${o}" ${c[f.key] == o ? "selected" : ""}>${f.labels ? f.labels[oi] : o}</option>`
+        ).join("");
+        return `<div class="field"><label>${f.label}</label>
+          <select data-key="${f.key}">${opts}</select></div>`;
+      }
+      return `<div class="field"><label>${f.label}</label>
+        <input type="${f.type}" step="${f.step}" min="${f.min ?? ""}"
+               data-key="${f.key}" value="${c[f.key] ?? ""}"/></div>`;
+    }).join("")}</div>`;
+  }
+
+  // ── Events — tab clicks ───────────────────────────────────────────────
+  tabsEl.addEventListener("click", e => {
+    const removeIdx = e.target.dataset.remove;
+    if (removeIdx !== undefined) {
+      customers.splice(Number(removeIdx), 1);
+      activeIdx = Math.min(activeIdx, customers.length - 1);
+      render();
+      return;
+    }
+    const idx = e.target.closest("[data-idx]")?.dataset.idx;
+    if (idx !== undefined) { activeIdx = Number(idx); render(); }
+  });
+
+  // ── Events — field changes ────────────────────────────────────────────
+  formsEl.addEventListener("input", e => {
+    const key = e.target.dataset.key;
+    if (!key) return;
+    const raw = e.target.value;
+    const field = FIELDS.find(f => f.key === key);
+    customers[activeIdx][key] = field.type === "number" ? Number(raw) : raw;
+  });
+
+  // ── Add / Clear ───────────────────────────────────────────────────────
+  btnAdd.addEventListener("click", () => {
+    customers.push(structuredClone(DEFAULTS));
+    activeIdx = customers.length - 1;
+    render();
+  });
+
+  btnClear.addEventListener("click", () => {
+    customers = [structuredClone(DEFAULTS)];
+    activeIdx = 0;
+    resultsEl.style.display = "none";
+    hideError();
+    render();
+  });
+
+  // ── Predict ───────────────────────────────────────────────────────────
+  btnPredict.addEventListener("click", async () => {
+    hideError();
+    btnPredict.disabled = true;
+    statusBar.textContent = "Scoring…";
+
+    try {
+      const url = apiUrlInput.value.trim();
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customers }),
+      });
+
+      if (!resp.ok) {
+        const detail = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${detail}`);
+      }
+
+      const data = await resp.json();
+      renderResults(data);
+      statusBar.textContent = `Scored ${data.count} customer(s) via model "${data.model_name}"`;
+    } catch (err) {
+      showError(err.message);
+      statusBar.textContent = "";
+    } finally {
+      btnPredict.disabled = false;
+    }
+  });
+
+  // ── Results ───────────────────────────────────────────────────────────
+  function renderResults(data) {
+    resultGrid.innerHTML = data.predictions.map((p, i) => {
+      const pct = (p.propensity_score * 100).toFixed(1);
+      const tier = p.propensity_score >= 0.65 ? "high"
+                 : p.propensity_score >= 0.35 ? "mid" : "low";
+      const tierLabel = tier === "high" ? "High propensity"
+                      : tier === "mid"  ? "Medium propensity" : "Low propensity";
+      return `
+        <div class="result-card">
+          <div class="label">Customer ${i + 1}</div>
+          <div class="score ${tier}">${pct}%</div>
+          <div class="tier ${tier}">${tierLabel}</div>
+        </div>`;
+    }).join("");
+    resultsEl.style.display = "block";
+    resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ── Error helpers ─────────────────────────────────────────────────────
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.style.display = "block";
+  }
+
+  function hideError() {
+    errorMsg.style.display = "none";
+    errorMsg.textContent = "";
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>
