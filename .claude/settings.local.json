@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(find /c/Users/natcarua/Documents/competence_dev/claude-code/propensity-telecom-case-study/src/propensity_telecom_case_study/api/ -type f -not -path */__pycache__/*)",
+      "Bash(.venv/Scripts/ruff check:*)"
+    ]
+  }
+}
